@@ -1,0 +1,165 @@
+---
+title: '443'
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Reading in the data for both districts and removing any Null / Irrelevant variables
+library(readr)
+Pike <- read_csv("Pike.csv")
+Pike$X3<-NULL
+Pike$X8<-NULL
+Pike$X9<-NULL
+Pike$X10<-NULL
+Pike <- na.omit(Pike)
+LaSalle<- read_csv("LaSalle.csv")
+LaSalle$X3<-NULL
+LaSalle$X8<-NULL
+LaSalle$X9<-NULL
+LaSalle$X10<-NULL
+LaSalle <- na.omit(LaSalle)
+```
+
+
+```{r}
+#Grouping the temperature data by the Min. temperature value of each month in district 60 (Pike)
+library(dplyr)
+Pike_Min <- Pike %>% 
+  group_by(DATE) %>%
+              filter(TMIN == min(TMIN))
+Pike_Min <-Pike_Min[!duplicated(Pike_Min$DATE),]
+#Removing values that aren't relevant in this dataframe
+Pike_Min$TMAX <- NULL
+Pike_Min$STATION <- NULL
+Pike_Min$TOBS <- NULL
+```
+
+```{r}
+#Grouping the temperature data by the Max. temperature value of each month in district 60 (Pike)
+Pike_Max <- Pike %>% 
+  group_by(DATE) %>%
+              filter(TMAX == max(TMAX))
+Pike_Max <-Pike_Max[!duplicated(Pike_Max$DATE),]
+#Removing values that aren't relevant in this dataframe
+Pike_Max$TMIN <- NULL
+Pike_Max$STATION <- NULL
+Pike_Max$TOBS <- NULL
+```
+
+
+```{r}
+#Making a final dataframe that contains both the the Min and max temperatures.
+Pike_final <- c()
+Pike_final$Date <- c(Pike_Max$DATE)
+Pike_final$TMAX <- c(Pike_Max$TMAX)
+Pike_final$TMIN <- c(Pike_Min$TMIN)
+Pike_final$Month <- substr(Pike_final$Date, 1, 2)
+Pike_final$Year <- substr(Pike_final$Date, 3, 4)
+Pike_final <- as.data.frame(Pike_final)
+```
+
+
+```{r}
+#Plot of Min temperature in district 60
+library(ggplot2)
+pike_min <- ggplot(Pike_final, aes(x=Pike_final$Month, y=TMIN,fill=Month)) +   
+  geom_violin()+
+  geom_boxplot(width=0.1, fill="white")+
+  labs(title="Plot of Min Temp by Month in District 60",x="Month", y = "Temperature(Fahrenheit)")
+pike_min
+
+```
+
+
+
+```{r}
+#Plot of Max temperature in district 60
+library(ggplot2)
+pike_max <- ggplot(Pike_final, aes(x=Pike_final$Month, y=TMAX,fill=Month)) +   
+  geom_violin()+
+  geom_boxplot(width=0.1, fill="white")+
+  labs(title="Plot of Max Temp by Month in District 60",x="Month", y = "Temperature(Fahrenheit)")
+pike_max
+```
+
+```{r}
+#Grouping the temperature data by the Min. temperature value of each month in district 20 (LaSalle)
+LaSalle_Min <- LaSalle %>% 
+  group_by(DATE) %>%
+              filter(TMIN == min(TMIN))
+LaSalle_Min <-LaSalle_Min[!duplicated(LaSalle_Min$DATE),]
+LaSalle_Min$TMAX <- NULL
+LaSalle_Min$STATION <- NULL
+LaSalle_Min$TOBS <- NULL
+```
+
+```{r}
+#Grouping the temperature data by the Max. temperature value of each month in district 20 (LaSalle)
+LaSalle_Max <- LaSalle %>% 
+  group_by(DATE) %>%
+              filter(TMAX == max(TMAX))
+LaSalle_Max <-LaSalle_Max[!duplicated(LaSalle_Max$DATE),]
+LaSalle_Max$TMIN <- NULL
+LaSalle_Max$STATION <- NULL
+LaSalle_Max$TOBS <- NULL
+```
+
+
+```{r}
+#Making a final dataframe that contains both the the Min and max temperatures.
+LaSalle_final <- c()
+LaSalle_final$Date <- c(LaSalle_Max$DATE)
+LaSalle_final$TMAX <- c(LaSalle_Max$TMAX)
+LaSalle_final$TMIN <- c(LaSalle_Min$TMIN)
+LaSalle_final$Month <- substr(LaSalle_final$Date, 1, 2)
+LaSalle_final$Year <- substr(LaSalle_final$Date, 3, 4)
+LaSalle_final <- as.data.frame(LaSalle_final)
+```
+
+
+```{r}
+#Plot of Min temperature in district 60
+lasalle_min <- ggplot(LaSalle_final, aes(x=LaSalle_final$Month, y=TMIN,fill=Month)) +   
+  geom_violin()+
+  geom_boxplot(width=0.1, fill="white")+
+  labs(title="Plot of Min Temp by Month in District 20",x="Month", y = "Temperature(Fahrenheit)")
+lasalle_min
+
+```
+
+```{r}
+#Plot of Max temperature in district 60
+lasalle_max <- ggplot(LaSalle_final, aes(x=LaSalle_final$Month, y=TMAX,fill=Month)) +   
+  geom_violin()+
+  geom_boxplot(width=0.1, fill="white")+
+  labs(title="Plot of Max Temp by Month in District 20",x="Month", y = "Temperature(Fahrenheit)")
+lasalle_max
+
+```
+```{r}
+#Total_Max for temperature comparison 
+Total_Max <- data.frame(LaSalle_Max$TMAX, Pike_Max$TMAX)
+names(Total_Max) <- c("Lasalle Max", "Pike Max")
+```
+
+```{r}
+#T test of average max
+t.test(Total_Max$`Lasalle Max`, Total_Max$`Pike Max`, data = Total_Max,paired = TRUE)
+```
+```{r}
+#Total_Min temperature comparison between the two districts
+Total_Min <- data.frame(LaSalle_Min$TMIN, Pike_Min$TMIN)
+names(Total_Min) <- c("Lasalle Min", "Pike Min")
+```
+
+```{r}
+#T test of average min
+t.test(Total_Min$`Lasalle Min`, Total_Min$`Pike Min`, data = Total_Min,paired = TRUE)
+```
+
